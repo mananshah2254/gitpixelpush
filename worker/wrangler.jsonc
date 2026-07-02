@@ -13,8 +13,7 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  // Uncomment once the gitpixelpush.com zone is on this Cloudflare account:
-  // "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
+  "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
   "vars": {
     // Public identifier of your GitHub OAuth App (not secret).
     "GITHUB_CLIENT_ID": "YOUR_GITHUB_OAUTH_CLIENT_ID",
