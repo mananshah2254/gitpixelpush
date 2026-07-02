@@ -1,19 +1,24 @@
 {
-  // GitPixelPush OAuth exchange Worker.
+  // GitPixelPush: one Worker serves the static site and the OAuth exchange.
   // Deploy:   npx wrangler deploy
   // Secret:   npx wrangler secret put GITHUB_CLIENT_SECRET
-  "name": "gitpixelpush-oauth",
+  "name": "gitpixelpush",
   "main": "worker.js",
   "compatibility_date": "2026-07-01",
   "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "../site"
+  },
   "observability": {
     "enabled": true,
     "head_sampling_rate": 1
   },
+  // Uncomment once the gitpixelpush.com zone is on this Cloudflare account:
+  // "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
   "vars": {
     // Public identifier of your GitHub OAuth App (not secret).
     "GITHUB_CLIENT_ID": "YOUR_GITHUB_OAUTH_CLIENT_ID",
-    // Comma-separated origins allowed to call /exchange.
-    "ALLOWED_ORIGINS": "http://localhost:8080,https://YOURNAME.github.io"
+    // Extra cross-origin callers allowed on /exchange (same-origin always works).
+    "ALLOWED_ORIGINS": "http://localhost:8787"
   }
 }

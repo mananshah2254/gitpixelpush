@@ -8,6 +8,7 @@
 
 function allowedOrigin(request, env) {
   const origin = request.headers.get("Origin") || "";
+  if (origin === new URL(request.url).origin) return origin; // same-origin site
   const allowed = (env.ALLOWED_ORIGINS || "")
     .split(",")
     .map((s) => s.trim())
