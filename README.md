@@ -13,7 +13,6 @@ that repo and every pixel disappears.
 
 ---
 
-
 ## What we used
 
 | Piece | Choice | Why |
