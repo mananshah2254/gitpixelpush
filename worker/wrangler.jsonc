@@ -16,7 +16,7 @@
   "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
   "vars": {
     // Public identifier of your GitHub OAuth App (not secret).
-    "GITHUB_CLIENT_ID": "YOUR_GITHUB_OAUTH_CLIENT_ID",
+    "GITHUB_CLIENT_ID": "Ov23livKJU8WYZAOMXCG",
     // Extra cross-origin callers allowed on /exchange (same-origin always works).
     "ALLOWED_ORIGINS": "http://localhost:8787"
   }
