@@ -13,7 +13,9 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
+  // Re-enable once the Cloudflare dashboard shows this zone as "Active"
+  // (nameserver propagation after a registrar switch takes a while):
+  // "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
   "vars": {
     // Public identifier of your GitHub OAuth App (not secret).
     "GITHUB_CLIENT_ID": "YOUR_GITHUB_OAUTH_CLIENT_ID",
