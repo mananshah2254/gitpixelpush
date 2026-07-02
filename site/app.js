@@ -21,6 +21,7 @@ const S = {
   undo: [], redo: [],
   stroking: false, rectAnchor: null, ghost: new Set(),
   abort: false, running: false,
+  private: false,
 };
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
@@ -88,12 +89,16 @@ async function fetchCalendar() {
 }
 
 /* ────────────────────────── auth ────────────────────────── */
-function signIn() {
+function hasRepoScope() {
+  return (sessionStorage.getItem("gpp_scope") || "").split(/[,\s]+/).includes("repo");
+}
+
+function signIn(scope = "public_repo read:user") {
   const state = crypto.randomUUID();
   sessionStorage.setItem("gpp_state", state);
   const u = new URL("https://github.com/login/oauth/authorize");
   u.searchParams.set("client_id", CFG.clientId);
-  u.searchParams.set("scope", "public_repo read:user");
+  u.searchParams.set("scope", scope);
   u.searchParams.set("state", state);
   u.searchParams.set("redirect_uri", location.origin + location.pathname);
   location.href = u.toString();
@@ -116,6 +121,7 @@ async function handleOAuthRedirect() {
     const data = await r.json();
     if (!data.access_token) throw new Error(data.error || "no token returned");
     sessionStorage.setItem("gpp_token", data.access_token);
+    sessionStorage.setItem("gpp_scope", data.scope || "");
     return true;
   } catch (e) {
     authError("Could not finish sign-in: " + e.message);
@@ -497,7 +503,7 @@ function planPayload() {
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
 
-async function ensureRepo(name) {
+async function ensureRepo(name, priv) {
   try {
     return { repo: await gh(`/repos/${S.user.login}/${name}`), existed: true };
   } catch (e) {
@@ -505,6 +511,7 @@ async function ensureRepo(name) {
   }
   const repo = await gh("/user/repos", { method: "POST", body: {
     name,
+    private: priv,
     description: "Contribution-graph art. Backdated empty commits, made with GitPixelPush.",
     auto_init: true, has_issues: false, has_wiki: false, has_projects: false,
   }});
@@ -522,10 +529,13 @@ async function runEngine(repoName, log, onProgress) {
 
   log(`plan: ${plan.length} days, ${total} commits`);
   log(`· checking github.com/${S.user.login}/${repoName}`);
-  const { repo, existed } = await ensureRepo(repoName);
+  const { repo, existed } = await ensureRepo(repoName, S.private);
   const full = repo.full_name;
   const branch = repo.default_branch || "main";
-  log(existed ? "· repository exists, painting into it" : `· created ${repo.html_url}`);
+  log(existed
+    ? `· repository exists (${repo.private ? "private" : "public"}), painting into it`
+    : `· created ${repo.html_url} (${repo.private ? "private" : "public"})`);
+  if (repo.private) log("· heads up: private pixels show only if your GitHub profile has Private contributions turned on");
 
   const head = await gh(`/repos/${full}/git/ref/heads/${branch}`);
   let parent = head.object.sha;
@@ -577,6 +587,49 @@ function logLine(text, cls = "") {
   span.textContent = text + "\n";
   log.appendChild(span);
   log.scrollTop = log.scrollHeight;
+}
+
+function setVisibility(priv) {
+  S.private = priv;
+  $("#m-vis-public").classList.toggle("active", !priv);
+  $("#m-vis-private").classList.toggle("active", priv);
+  $("#m-private-note").hidden = !priv;
+  $("#m-vis-word").textContent = priv ? "private" : "public";
+  const run = $("#m-run");
+  if (priv && !hasRepoScope()) {
+    run.textContent = "Grant private access on GitHub";
+    run.dataset.mode = "upgrade";
+  } else {
+    run.textContent = "I understand, push it";
+    run.dataset.mode = "run";
+  }
+}
+
+/* Upgrading to the repo scope means a round trip through GitHub,
+   so the painted plan is parked in sessionStorage and restored after. */
+function savePending() {
+  sessionStorage.setItem("gpp_pending", JSON.stringify({
+    plan: [...S.plan], density: S.density,
+    repo: $("#m-repo-input").value, private: true,
+  }));
+}
+
+function restorePending() {
+  const raw = sessionStorage.getItem("gpp_pending");
+  if (!raw) return;
+  sessionStorage.removeItem("gpp_pending");
+  try {
+    const p = JSON.parse(raw);
+    S.density = p.density || "auto";
+    $("#density").value = S.density;
+    S.plan = new Map((p.plan || []).filter(([d]) => S.byDate.has(d)));
+    repaintAll();
+    if (S.plan.size) {
+      $("#m-repo-input").value = p.repo || "pixel-canvas";
+      S.private = !!p.private;
+      openExecuteModal();
+    }
+  } catch { /* corrupt pending state, drop it */ }
 }
 
 function refreshPreview() {
@@ -640,19 +693,29 @@ function finishRun() {
   $("#m-close").hidden = false;
 }
 
+function openExecuteModal() {
+  $("#modal-confirm").hidden = false;
+  $("#modal-progress").hidden = true;
+  $("#m-open-repo").hidden = $("#m-open-profile").hidden = $("#m-close").hidden = true;
+  $("#progress-fill").style.width = "0%";
+  $("#progress-pct").textContent = "0%";
+  $("#modal").hidden = false;
+  setVisibility(S.private);
+  refreshPreview();
+}
+
 function wireModal() {
-  $("#btn-execute").addEventListener("click", () => {
-    $("#modal-confirm").hidden = false;
-    $("#modal-progress").hidden = true;
-    $("#m-open-repo").hidden = $("#m-open-profile").hidden = $("#m-close").hidden = true;
-    $("#progress-fill").style.width = "0%";
-    $("#progress-pct").textContent = "0%";
-    $("#modal").hidden = false;
-    refreshPreview();
-  });
+  $("#btn-execute").addEventListener("click", openExecuteModal);
+  $("#m-vis-public").addEventListener("click", () => setVisibility(false));
+  $("#m-vis-private").addEventListener("click", () => setVisibility(true));
   $("#m-repo-input").addEventListener("change", refreshPreview);
   $("#m-cancel").addEventListener("click", () => { $("#modal").hidden = true; });
-  $("#m-run").addEventListener("click", runPlan);
+  $("#m-run").addEventListener("click", () => {
+    if ($("#m-run").dataset.mode === "upgrade") {
+      savePending();
+      signIn("repo read:user");
+    } else runPlan();
+  });
   $("#m-abort").addEventListener("click", () => { S.abort = true; $("#m-abort").disabled = true; });
   $("#m-close").addEventListener("click", async () => {
     $("#modal").hidden = true;
@@ -791,6 +854,7 @@ async function loadReal() {
   S.user = { login: me.login, id: me.id, name: me.name || me.login, avatar_url: me.avatar_url };
   enterApp(S.user, false);
   buildGrid(await fetchCalendar());
+  restorePending();
 }
 
 /* ────────────────────────── init ────────────────────────── */
@@ -806,7 +870,7 @@ async function loadReal() {
     $("#setup-note").hidden = false;
     $("#btn-signin").disabled = true;
   } else {
-    $("#btn-signin").addEventListener("click", signIn);
+    $("#btn-signin").addEventListener("click", () => signIn());
   }
 
   try {

@@ -358,6 +358,17 @@ a:hover { color: var(--ink); }
   color: var(--ink); padding: 9px 12px; font-size: 13px; width: 220px;
 }
 #m-repo-input:focus { outline: none; border-color: var(--accent); }
+.seg {
+  display: inline-flex; gap: 3px; padding: 3px;
+  background: rgba(0, 0, 0, 0.3); border: 1px solid var(--line-strong); border-radius: 11px;
+}
+.seg-btn {
+  font: 500 12.5px var(--font-body); color: var(--ink-2);
+  background: transparent; border: none; border-radius: 8px;
+  padding: 6px 14px; cursor: pointer; transition: all .15s;
+}
+.seg-btn:hover:not(.active) { color: var(--ink); }
+.seg-btn.active { background: rgba(57, 211, 83, 0.16); color: var(--ink); }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
 
 .progress { height: 9px; background: rgba(0, 0, 0, 0.35); border-radius: 99px; overflow: hidden; border: 1px solid var(--line); }

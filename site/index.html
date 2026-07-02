@@ -79,7 +79,8 @@
       <h3>Sign in</h3>
       <p>Authorize with GitHub. Two scopes only: <span class="mono">public_repo</span> to
          create and push to one repo, <span class="mono">read:user</span> to read your
-         contribution calendar. Your token stays in this tab.</p>
+         contribution calendar. Your token stays in this tab. Private canvases ask for
+         GitHub's broader <span class="mono">repo</span> scope, and only if you choose that.</p>
     </div>
     <div class="step glass tilt reveal" style="--d:2">
       <div class="step-num mono">02</div>
@@ -105,7 +106,8 @@
     <ul class="honest-list">
       <li><b>It fabricates activity, and says so.</b> The commits are empty, labeled
         <span class="mono">gitpixelpush: pixel …</span>, and the repo README states the graph art is intentional.</li>
-      <li><b>One repo, nothing else.</b> GitPixelPush creates or reuses a single public repository you name.
+      <li><b>One repo, nothing else.</b> GitPixelPush creates or reuses a single repository you name,
+        public by default or private if you choose.
         It never touches your other repos, and deleting that repo erases every pixel.</li>
       <li><b>No servers holding your data.</b> This is a static page. Your token lives in this browser tab
         and dies with it. One tiny relay swaps the OAuth code for the token, stores nothing, and forgets you.</li>
@@ -210,7 +212,7 @@
     <div id="modal-confirm">
       <h3 id="modal-title">Here is exactly what happens</h3>
       <ol class="modal-steps">
-        <li>A public repository <span class="mono" id="m-repo-url"></span> is <span id="m-repo-verb">created</span> under your account.</li>
+        <li>A <span id="m-vis-word">public</span> repository <span class="mono" id="m-repo-url"></span> is <span id="m-repo-verb">created</span> under your account.</li>
         <li>Your browser creates <span class="mono" id="m-commits"></span> empty commits through the GitHub API,
             each backdated to its planned day and authored as <span class="mono" id="m-email"></span>.</li>
         <li>The <span class="mono" id="m-branch">main</span> branch is moved to the newest commit.
@@ -222,7 +224,16 @@
       <div class="field-row">
         <label for="m-repo-input">Repository</label>
         <input id="m-repo-input" class="mono" value="pixel-canvas" spellcheck="false">
+        <span class="seg" role="radiogroup" aria-label="Repository visibility">
+          <button id="m-vis-public" class="seg-btn active" type="button">Public</button>
+          <button id="m-vis-private" class="seg-btn" type="button">Private</button>
+        </span>
       </div>
+      <p id="m-private-note" class="muted small" hidden>
+        Private canvases need one extra GitHub permission (the <span class="mono">repo</span> scope,
+        GitHub has no narrower one for creating private repos). And your pixels will only show if
+        "Private contributions" is turned on in your profile's contribution settings on GitHub.
+      </p>
       <div class="modal-actions">
         <button id="m-cancel" class="btn btn-glass">Back</button>
         <button id="m-run" class="btn btn-primary">I understand, push it</button>
