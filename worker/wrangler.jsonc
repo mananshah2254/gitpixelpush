@@ -1,0 +1,19 @@
+{
+  // GitPixelPush OAuth exchange Worker.
+  // Deploy:   npx wrangler deploy
+  // Secret:   npx wrangler secret put GITHUB_CLIENT_SECRET
+  "name": "gitpixelpush-oauth",
+  "main": "worker.js",
+  "compatibility_date": "2026-07-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
+  },
+  "vars": {
+    // Public identifier of your GitHub OAuth App (not secret).
+    "GITHUB_CLIENT_ID": "YOUR_GITHUB_OAUTH_CLIENT_ID",
+    // Comma-separated origins allowed to call /exchange.
+    "ALLOWED_ORIGINS": "http://localhost:8080,https://YOURNAME.github.io"
+  }
+}

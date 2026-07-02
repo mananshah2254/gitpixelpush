@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitPixelPush · Paint your GitHub contribution graph</title>
+<meta name="description" content="Turn your GitHub contribution graph into a canvas. Paint pixels, stamp words, and push them as clearly labeled backdated commits. Runs in your browser.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='8' width='38' height='38' rx='9' fill='%2339d353'/><rect x='54' y='8' width='38' height='38' rx='9' fill='%23115231'/><rect x='8' y='54' width='38' height='38' rx='9' fill='%23006d32'/><rect x='54' y='54' width='38' height='38' rx='9' fill='%2326a641'/></svg>">
+</head>
+<body>
+
+<!-- ambient background: aurora + drifting pixels -->
+<div class="bg" aria-hidden="true">
+  <div class="aurora a1"></div>
+  <div class="aurora a2"></div>
+  <div class="aurora a3"></div>
+  <div id="pixel-field" class="pixel-field"></div>
+</div>
+
+<nav class="nav glass">
+  <a class="brand" href="#top">
+    <span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="brand-name">GitPixelPush</span>
+  </a>
+  <div class="nav-links">
+    <a href="#how">How it works</a>
+    <a href="#honest">Transparency</a>
+    <a href="privacy.html">Privacy</a>
+  </div>
+  <div id="nav-user" class="nav-user" hidden>
+    <img id="user-avatar" alt="">
+    <span id="user-login" class="mono"></span>
+    <button id="btn-signout" class="btn btn-text">Sign out</button>
+  </div>
+</nav>
+
+<!-- ══════════════ Landing ══════════════ -->
+<section id="landing" class="hero" >
+  <div class="hero-inner">
+    <div class="hero-badge reveal mono">53 weeks × 7 days = one canvas</div>
+    <h1 class="hero-title">
+      <span class="reveal" style="--d:1">Your contribution graph,</span>
+      <span class="reveal grad" style="--d:2">painted by you.</span>
+    </h1>
+    <p class="hero-sub reveal" style="--d:3">
+      Sign in, sketch pixels onto your real GitHub graph, then push them as
+      clearly labeled backdated commits. All in your browser. Nothing hidden.
+    </p>
+    <div class="hero-cta reveal" style="--d:4">
+      <button id="btn-signin" class="btn btn-primary btn-lg magnetic">
+        <svg viewBox="0 0 16 16" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+        Sign in with GitHub
+      </button>
+      <button id="btn-demo" class="btn btn-glass btn-lg magnetic">Try the demo canvas</button>
+    </div>
+    <p id="setup-note" class="setup-note mono" hidden>
+      Deployment not configured yet. Fill <b>site/config.js</b> and the Worker vars, see the README.
+    </p>
+    <p id="auth-error" class="auth-error" hidden></p>
+  </div>
+
+  <!-- animated mini-graph teaser -->
+  <div class="hero-teaser glass tilt reveal" style="--d:5" aria-hidden="true">
+    <div id="teaser-grid" class="teaser-grid"></div>
+    <div class="teaser-caption mono">hi, this could be your graph</div>
+  </div>
+</section>
+
+<!-- ══════════════ How it works ══════════════ -->
+<section id="how" class="section">
+  <h2 class="section-title reveal">Three steps, no install</h2>
+  <div class="steps-row">
+    <div class="step glass tilt reveal" style="--d:1">
+      <div class="step-num mono">01</div>
+      <h3>Sign in</h3>
+      <p>Authorize with GitHub. Two scopes only: <span class="mono">public_repo</span> to
+         create and push to one repo, <span class="mono">read:user</span> to read your
+         contribution calendar. Your token stays in this tab.</p>
+    </div>
+    <div class="step glass tilt reveal" style="--d:2">
+      <div class="step-num mono">02</div>
+      <h3>Paint</h3>
+      <p>Your real graph becomes the canvas. Drag to draw, fill date ranges,
+         stamp words in a pixel font, or drop a preset. Four ink levels,
+         undo, and a live commit count as you go.</p>
+    </div>
+    <div class="step glass tilt reveal" style="--d:3">
+      <div class="step-num mono">03</div>
+      <h3>Push</h3>
+      <p>Review the exact plan, then watch your browser create each backdated
+         commit through the GitHub API and move the branch. Your graph updates
+         within a minute or two.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════ Transparency ══════════════ -->
+<section id="honest" class="section">
+  <div class="honest glass reveal">
+    <h2 class="section-title">Honest by design</h2>
+    <ul class="honest-list">
+      <li><b>It fabricates activity, and says so.</b> The commits are empty, labeled
+        <span class="mono">gitpixelpush: pixel …</span>, and the repo README states the graph art is intentional.</li>
+      <li><b>One repo, nothing else.</b> GitPixelPush creates or reuses a single public repository you name.
+        It never touches your other repos, and deleting that repo erases every pixel.</li>
+      <li><b>No servers holding your data.</b> This is a static page. Your token lives in this browser tab
+        and dies with it. One tiny relay swaps the OAuth code for the token, stores nothing, and forgets you.</li>
+      <li><b>Undo anytime.</b> Revoke access in
+        <a href="https://github.com/settings/applications" target="_blank" rel="noopener">GitHub settings</a>,
+        delete the repo, done.</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══════════════ App ══════════════ -->
+<main id="app" class="app" hidden>
+  <section class="canvas-card glass tilt-lite">
+    <div class="canvas-head">
+      <div>
+        <h2>Your year, as pixels</h2>
+        <p id="canvas-sub" class="muted"></p>
+      </div>
+      <div class="legend" aria-hidden="true">
+        <span class="muted">Less</span>
+        <i class="lg l0"></i><i class="lg l1"></i><i class="lg l2"></i><i class="lg l3"></i><i class="lg l4"></i>
+        <span class="muted">More</span>
+        <span class="legend-sep"></span>
+        <i class="lg l2 ring"></i><span class="muted">planned</span>
+      </div>
+    </div>
+    <div class="grid-scroll">
+      <div class="grid-wrap">
+        <div id="month-row" class="month-row mono"></div>
+        <div class="grid-body">
+          <div class="dow-col mono"><span></span><span>Mon</span><span></span><span>Wed</span><span></span><span>Fri</span><span></span></div>
+          <div id="grid" class="grid" role="grid" aria-label="Contribution canvas"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="control-row">
+    <div class="panel glass toolbar">
+      <div class="tool-group" role="radiogroup" aria-label="Tool">
+        <button class="tool" data-tool="paint" title="Paint · P"><svg viewBox="0 0 24 24"><path d="M12 19l7-7-3-3-7 7-1 4zM15 6l3 3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>Paint</button>
+        <button class="tool" data-tool="rect" title="Range fill · R"><svg viewBox="0 0 24 24"><rect x="4" y="6" width="16" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.7"/></svg>Range</button>
+        <button class="tool" data-tool="text" title="Stamp text · T"><svg viewBox="0 0 24 24"><path d="M5 6h14M12 6v13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Text</button>
+        <button class="tool" data-tool="erase" title="Erase · E"><svg viewBox="0 0 24 24"><path d="M4 15l7-7 7 7-4 4H8z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/></svg>Erase</button>
+      </div>
+      <div class="tool-sep"></div>
+      <div class="brush-group" role="radiogroup" aria-label="Ink level">
+        <button class="brush l1" data-level="1" title="Ink level 1"></button>
+        <button class="brush l2" data-level="2" title="Ink level 2"></button>
+        <button class="brush l3" data-level="3" title="Ink level 3"></button>
+        <button class="brush l4" data-level="4" title="Ink level 4"></button>
+      </div>
+      <div class="tool-sep"></div>
+      <input id="text-input" class="text-input mono" type="text" maxlength="14" placeholder="type, then click the grid" hidden>
+      <div class="spacer"></div>
+      <button id="btn-undo" class="btn btn-icon" title="Undo · ⌘Z" disabled><svg viewBox="0 0 24 24"><path d="M8 5L3 10l5 5M3 10h11a6 6 0 0 1 0 12h-3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="btn-redo" class="btn btn-icon" title="Redo · ⇧⌘Z" disabled><svg viewBox="0 0 24 24"><path d="M16 5l5 5-5 5M21 10H10a6 6 0 0 0 0 12h3" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      <button id="btn-clear" class="btn btn-glass">Clear plan</button>
+    </div>
+    <div class="panel glass presets">
+      <span class="panel-label mono">Presets</span>
+      <button class="chip" data-preset="heart">♥ Heart</button>
+      <button class="chip" data-preset="wave">∿ Wave</button>
+      <button class="chip" data-preset="checker">▚ Checker</button>
+      <button class="chip" data-preset="fill">■ Fill year</button>
+    </div>
+  </section>
+
+  <section class="panel glass statbar">
+    <div class="stat"><span class="stat-num" id="stat-cells">0</span><span class="stat-label">days planned</span></div>
+    <div class="stat"><span class="stat-num" id="stat-commits">0</span><span class="stat-label">commits to paint</span></div>
+    <div class="stat"><span class="stat-num" id="stat-span">–</span><span class="stat-label">date span</span></div>
+    <div class="density">
+      <label for="density">Ink density</label>
+      <select id="density">
+        <option value="auto">Auto · match my graph</option>
+        <option value="1">Light · 1–4 commits</option>
+        <option value="2">Medium · 2–8 commits</option>
+        <option value="5">Bold · 5–20 commits</option>
+      </select>
+    </div>
+    <div class="spacer"></div>
+    <button id="btn-execute" class="btn btn-primary magnetic" disabled>Push the pixels</button>
+  </section>
+
+  <p class="footnote">Tip: keys <span class="mono">P R T E</span> switch tools, <span class="mono">1–4</span> pick ink,
+     <span class="mono">⌘Z</span> undoes. Painting over busy days only adds the difference.</p>
+</main>
+
+<footer class="footer">
+  <span>GitPixelPush · art for your own graph, in the open</span>
+  <span class="footer-links">
+    <a href="privacy.html">Privacy</a>
+    <a href="https://github.com/settings/applications" target="_blank" rel="noopener">Revoke access</a>
+  </span>
+  <span class="muted">Not affiliated with GitHub</span>
+</footer>
+
+<!-- ══════════════ Execute modal ══════════════ -->
+<div id="modal" class="modal-backdrop" hidden>
+  <div class="modal glass-strong" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div id="modal-confirm">
+      <h3 id="modal-title">Here is exactly what happens</h3>
+      <ol class="modal-steps">
+        <li>A public repository <span class="mono" id="m-repo-url"></span> is <span id="m-repo-verb">created</span> under your account.</li>
+        <li>Your browser creates <span class="mono" id="m-commits"></span> empty commits through the GitHub API,
+            each backdated to its planned day and authored as <span class="mono" id="m-email"></span>.</li>
+        <li>The <span class="mono" id="m-branch">main</span> branch is moved to the newest commit.
+            GitHub redraws your graph within a minute or two.</li>
+      </ol>
+      <div class="code-peek mono" id="m-sample"></div>
+      <p class="muted small">The repo README says it is contribution art made of backdated commits.
+         Delete the repo and the pixels vanish. Large plans take a while, about 3 commits per second.</p>
+      <div class="field-row">
+        <label for="m-repo-input">Repository</label>
+        <input id="m-repo-input" class="mono" value="pixel-canvas" spellcheck="false">
+      </div>
+      <div class="modal-actions">
+        <button id="m-cancel" class="btn btn-glass">Back</button>
+        <button id="m-run" class="btn btn-primary">I understand, push it</button>
+      </div>
+    </div>
+    <div id="modal-progress" hidden>
+      <h3>Painting…</h3>
+      <div class="progress"><div id="progress-fill" class="progress-fill"></div></div>
+      <div id="progress-pct" class="progress-pct mono">0%</div>
+      <pre id="run-log" class="run-log mono" aria-live="polite"></pre>
+      <div class="modal-actions">
+        <button id="m-abort" class="btn btn-glass">Stop here</button>
+        <a id="m-open-repo" class="btn btn-glass" target="_blank" rel="noopener" hidden>Open the repo</a>
+        <a id="m-open-profile" class="btn btn-primary" target="_blank" rel="noopener" hidden>See your graph</a>
+        <button id="m-close" class="btn btn-glass" hidden>Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="tooltip" class="tooltip mono" hidden></div>
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

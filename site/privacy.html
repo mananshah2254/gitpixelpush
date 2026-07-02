@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy · GitPixelPush</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect x='8' y='8' width='38' height='38' rx='9' fill='%2339d353'/><rect x='54' y='8' width='38' height='38' rx='9' fill='%23115231'/><rect x='8' y='54' width='38' height='38' rx='9' fill='%23006d32'/><rect x='54' y='54' width='38' height='38' rx='9' fill='%2326a641'/></svg>">
+<style>
+  .policy { max-width: 760px; margin: 0 auto; padding: 60px 24px 80px; }
+  .policy h1 { font: 700 36px var(--font-display); letter-spacing: -0.02em; margin-bottom: 8px; }
+  .policy .updated { color: var(--ink-3); font-size: 13px; margin-bottom: 40px; }
+  .policy section { margin-bottom: 34px; }
+  .policy h2 { font: 600 19px var(--font-display); margin-bottom: 10px; }
+  .policy p, .policy li { color: var(--ink-2); font-size: 14.5px; }
+  .policy ul { margin: 10px 0 0 20px; display: flex; flex-direction: column; gap: 8px; }
+  .policy .mono { color: var(--ink); }
+  .policy a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="bg" aria-hidden="true">
+  <div class="aurora a1"></div>
+  <div class="aurora a2"></div>
+</div>
+
+<nav class="nav glass">
+  <a class="brand" href="index.html">
+    <span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+    <span class="brand-name">GitPixelPush</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+  </div>
+</nav>
+
+<main class="policy">
+  <h1>Privacy policy</h1>
+  <p class="updated mono">Last updated: July 1, 2026</p>
+
+  <section>
+    <h2>The short version</h2>
+    <p>GitPixelPush is a static web page. It has no database, no user accounts of its own,
+       no analytics, and no cookies. Everything it does happens in your browser, between
+       you and GitHub. We could not sell your data even if we wanted to, because we never have it.</p>
+  </section>
+
+  <section>
+    <h2>What we access on GitHub</h2>
+    <p>When you sign in, GitHub asks you to grant two OAuth scopes:</p>
+    <ul>
+      <li><span class="mono">read:user</span>, used to read your public profile and your
+          contribution calendar so the canvas can show your real graph.</li>
+      <li><span class="mono">public_repo</span>, used to create one public repository that
+          you name, and to push commits to it. GitPixelPush never reads, modifies, or
+          deletes any other repository.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Your access token</h2>
+    <ul>
+      <li>The OAuth code is exchanged for a token by a small relay (a Cloudflare Worker),
+          because that step requires an app secret. The relay passes the token straight back
+          to your browser. It does not store it, log it, or attach it to any identity.</li>
+      <li>In your browser, the token is kept in <span class="mono">sessionStorage</span>.
+          It is deleted when you close the tab or press Sign out.</li>
+      <li>All GitHub API calls, including every commit that paints your graph, are made
+          directly from your browser to <span class="mono">api.github.com</span>.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What GitPixelPush creates</h2>
+    <p>One public repository under your account, containing empty commits that are
+       intentionally backdated to draw on your contribution graph. Each commit message is
+       labeled <span class="mono">gitpixelpush: pixel …</span> and the repository README
+       states that the content is contribution art. Deleting that repository removes every
+       pixel from your graph.</p>
+  </section>
+
+  <section>
+    <h2>Cookies and tracking</h2>
+    <p>None. No cookies, no fingerprinting, no analytics scripts, no ads. Fonts are loaded
+       from Google Fonts, which sees a standard font request from your browser.</p>
+  </section>
+
+  <section>
+    <h2>Revoking access</h2>
+    <p>You can revoke GitPixelPush's access at any time at
+       <a href="https://github.com/settings/applications" target="_blank" rel="noopener">github.com/settings/applications</a>.
+       Sign out in the app to clear the token from your browser immediately.</p>
+  </section>
+
+  <section>
+    <h2>Changes</h2>
+    <p>If this policy changes, the date above changes with it. Since the app is open in
+       how it works, the source is the best documentation of what it does.</p>
+  </section>
+</main>
+
+<footer class="footer">
+  <span>GitPixelPush · art for your own graph, in the open</span>
+  <span class="muted">Not affiliated with GitHub</span>
+</footer>
+</body>
+</html>
