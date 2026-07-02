@@ -6,15 +6,15 @@ their own browser creates clearly labeled backdated commits through the GitHub
 API. No server ever holds a user's token or data.
 
 ```
-site/     Static frontend (host on GitHub Pages or Cloudflare Pages)
+site/     Static frontend, served as Worker assets
   index.html    Landing + canvas app
   privacy.html  Privacy policy
   styles.css    Glass design system + animations
   app.js        Canvas, tools, OAuth flow, browser-side commit engine
-  config.js     ← you fill this in (client ID + Worker URL)
-worker/   Cloudflare Worker (OAuth code → token exchange, the only server piece)
+  config.js     ← you fill in the OAuth client ID
+worker/   One Cloudflare Worker: serves site/ AND the /exchange endpoint
   worker.js
-  wrangler.jsonc  ← you fill in vars
+  wrangler.jsonc  ← you fill in GITHUB_CLIENT_ID (and the custom domain route)
 ```
 
 ## Architecture in one paragraph
@@ -30,58 +30,51 @@ commit cap per run stays inside GitHub's 5,000 requests/hour budget.
 
 ## Setup
 
-### 1. Create a GitHub OAuth App (2 minutes)
-
-1. Go to **github.com/settings/developers → OAuth Apps → New OAuth App**.
-2. Application name: `GitPixelPush` (or your fork's name).
-3. Homepage URL: where the site will live, e.g. `https://YOURNAME.github.io/gitpixelpush/`.
-4. Authorization callback URL: **the same URL** (the app redirects back to itself).
-5. Register, then copy the **Client ID** and generate a **Client Secret**.
-
-No verification process, no review queue. It works immediately for all users.
-
-### 2. Deploy the Worker
+### 1. Deploy the Worker (site included)
 
 ```bash
 cd worker
-npx wrangler login                       # once
-# edit wrangler.jsonc: set GITHUB_CLIENT_ID and ALLOWED_ORIGINS
-npx wrangler deploy
-npx wrangler secret put GITHUB_CLIENT_SECRET   # paste the secret when prompted
+npx wrangler login       # once
+npx wrangler deploy      # serves site/ + /exchange at https://gitpixelpush.<you>.workers.dev
 ```
 
-Note the deployed URL, e.g. `https://gitpixelpush-oauth.YOURNAME.workers.dev`.
-`ALLOWED_ORIGINS` must list the exact origin(s) of the site, comma separated,
-e.g. `https://YOURNAME.github.io`. Include `http://localhost:8080` while testing.
+### 2. Attach the domain
 
-### 3. Configure the site
+Have the `gitpixelpush.com` zone on your Cloudflare account (automatic if
+bought via Cloudflare Registrar; otherwise add the site in the dashboard and
+point the registrar's nameservers at Cloudflare). Then uncomment the
+`routes` line in `wrangler.jsonc` and `npx wrangler deploy` again. Cloudflare
+provisions DNS and the certificate for you.
 
-Edit `site/config.js`:
+### 3. Create a GitHub OAuth App (2 minutes)
 
-```js
-window.GPP_CONFIG = {
-  clientId: "<your OAuth app client ID>",
-  exchangeUrl: "https://gitpixelpush-oauth.YOURNAME.workers.dev/exchange",
-};
+1. Go to **github.com/settings/developers → OAuth Apps → New OAuth App**.
+2. Application name: `GitPixelPush`.
+3. Homepage URL: `https://gitpixelpush.com`.
+4. Authorization callback URL: `https://gitpixelpush.com/` (the app redirects back to itself).
+5. Register, copy the **Client ID**, generate a **Client Secret**.
+
+No verification process, no review queue. It works immediately for all users.
+
+### 4. Wire in the credentials
+
+```bash
+# the secret goes to Cloudflare, never into git:
+npx wrangler secret put GITHUB_CLIENT_SECRET   # paste when prompted
 ```
 
-### 4. Host the site
-
-**GitHub Pages:** push the contents of `site/` to a repo, then Settings →
-Pages → Deploy from branch. **Cloudflare Pages:** create a project, root
-directory `site/`, no build step. Either way, make sure the final URL matches
-the OAuth app's homepage/callback URLs and the Worker's `ALLOWED_ORIGINS`.
+Put the Client ID (public) in two places, then deploy once more:
+`site/config.js` → `clientId`, and `worker/wrangler.jsonc` → `GITHUB_CLIENT_ID`.
 
 ### 5. Test locally
 
 ```bash
-cd site && python3 -m http.server 8080   # → http://localhost:8080
+cd worker && npx wrangler dev    # → http://localhost:8787, site + exchange together
 ```
 
-GitHub OAuth apps allow one callback URL, so for local development either
-create a second OAuth app ("GitPixelPush Dev") with callback
-`http://localhost:8080/`, or just use the demo canvas (`#demo`), which needs
-no sign-in at all.
+GitHub OAuth apps allow one callback URL, so for local sign-in testing create
+a second OAuth app ("GitPixelPush Dev") with callback `http://localhost:8787/`,
+or just use the demo canvas (`#demo`), which needs no sign-in at all.
 
 ## Notes
 
