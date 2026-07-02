@@ -8,7 +8,8 @@ const $$ = (s) => [...document.querySelectorAll(s)];
 const CFG = window.GPP_CONFIG || {};
 const API = "https://api.github.com";
 const MAX_COMMITS = 4000;      // keeps a run inside GitHub's 5000 req/hour budget
-const CHECKPOINT_EVERY = 250;  // move the branch every N commits so progress sticks
+const CHECKPOINT_EVERY = 100;  // move the branch every N commits so progress sticks
+const PACE_MS = 1000;          // GitHub's secondary rate limit wants ~1 write/second
 
 /* ────────────────────────── state ────────────────────────── */
 const S = {
@@ -70,6 +71,8 @@ async function gh(path, { method = "GET", body } = {}) {
   if (!r.ok) {
     const data = await r.json().catch(() => ({}));
     const err = Object.assign(new Error(data.message || `GitHub API error ${r.status}`), { status: r.status });
+    err.retryAfter = Number(r.headers.get("retry-after")) || null;
+    err.secondary = (r.status === 403 || r.status === 429) && /secondary rate limit/i.test(err.message);
     if (r.status === 403 && r.headers.get("x-ratelimit-remaining") === "0") {
       const reset = new Date(Number(r.headers.get("x-ratelimit-reset")) * 1000);
       err.message = `GitHub's hourly API limit is used up. It resets at ${reset.toLocaleTimeString()}. Progress so far is already on your graph.`;
@@ -522,6 +525,22 @@ async function ensureRepo(name, priv) {
   throw new Error("The repository was created but its first branch never appeared. Try again in a minute.");
 }
 
+/* Write with automatic recovery from GitHub's secondary rate limit:
+   pause for the time GitHub asks, then pick up where we left off. */
+async function ghWrite(path, opts, log) {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await gh(path, opts);
+    } catch (e) {
+      if (e.secondary && attempt < 4) {
+        const wait = (e.retryAfter || 60) + 5;
+        log(`· GitHub asked us to slow down. Pausing ${wait}s, progress is safe, this resumes by itself…`);
+        await sleep(wait * 1000);
+      } else throw e;
+    }
+  }
+}
+
 async function runEngine(repoName, log, onProgress) {
   const plan = planPayload();
   const total = plan.reduce((n, p) => n + p.commits, 0);
@@ -554,28 +573,31 @@ async function runEngine(repoName, log, onProgress) {
   for (const p of plan) {
     for (let i = 0; i < p.commits; i++) {
       if (S.abort) {
-        await gh(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } });
+        await ghWrite(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } }, log);
         log(`· stopped by you. ${done} commits are on your graph.`, "ok");
         return { repo, total: done, partial: true };
       }
       const minutes = 9 * 60 + Math.round(i * (9 * 60) / Math.max(p.commits, 1));
       const date = isoWithOffset(p.date, minutes);
-      const c = await gh(`/repos/${full}/git/commits`, { method: "POST", body: {
+      const t0 = Date.now();
+      const c = await ghWrite(`/repos/${full}/git/commits`, { method: "POST", body: {
         message: `gitpixelpush: pixel ${p.date} (${i + 1}/${p.commits})`,
         tree, parents: [parent],
         author: { ...author, date }, committer: { ...author, date },
-      }});
+      }}, log);
       parent = c.sha;
       done++; sinceCheckpoint++;
       onProgress(done, total, p.date);
       if (sinceCheckpoint >= CHECKPOINT_EVERY) {
-        await gh(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } });
+        await ghWrite(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } }, log);
         sinceCheckpoint = 0;
         log(`· checkpoint: ${done}/${total} pushed`);
       }
+      const elapsed = Date.now() - t0;
+      if (elapsed < PACE_MS) await sleep(PACE_MS - elapsed);
     }
   }
-  await gh(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } });
+  await ghWrite(`/repos/${full}/git/refs/heads/${branch}`, { method: "PATCH", body: { sha: parent } }, log);
   return { repo, total: done, partial: false };
 }
 
@@ -671,8 +693,10 @@ async function runPlan() {
   try {
     const result = await runEngine(repoName, logLine, (done, tot, date) => {
       const pct = Math.round((done / tot) * 100);
+      const mins = Math.ceil(((tot - done) * (PACE_MS + 150)) / 60000);
       $("#progress-fill").style.width = pct + "%";
-      $("#progress-pct").textContent = `${pct}% · ${done}/${tot} · ${date}`;
+      $("#progress-pct").textContent =
+        `${pct}% · ${done}/${tot} · ${date}${done < tot ? ` · ~${mins} min left` : ""}`;
     });
     $("#progress-fill").style.width = "100%";
     if (!result.partial) logLine("✓ Pushed. GitHub can take a minute to redraw your graph.", "ok");
