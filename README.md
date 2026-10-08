@@ -28,6 +28,8 @@ that repo and every pixel disappears.
 There is **no database, no analytics, no cookies, and no server that stores
 anything**. That is not a marketing line, it is the architecture.
 
+AdSense ownership review is pending: the homepage has a publisher verification meta tag and `site/ads.txt` has the authorized-seller record. Neither loads ads or tracking today. If ads are enabled later, update this description, finish consent controls where required, and keep ads away from the OAuth and graph-painting controls.
+
 ## How it works, in one picture
 
 ```
