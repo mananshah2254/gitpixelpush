@@ -891,6 +891,7 @@ async function loadReal() {
   $("#btn-signout").addEventListener("click", signOut);
 
   if (!configured()) {
+    $("#setup-note").textContent = "Sign-in is temporarily unavailable because this deployment is not configured.";
     $("#setup-note").hidden = false;
     $("#btn-signin").disabled = true;
   } else {
