@@ -74,6 +74,9 @@ export default {
       if (!r.ok || data.error) {
         return json({ error: data.error || "exchange_failed" }, 400, origin);
       }
+      if (!data.access_token || typeof data.access_token !== "string") {
+        return json({ error: "exchange_failed" }, 502, origin);
+      }
       return json(
         {
           access_token: data.access_token,
