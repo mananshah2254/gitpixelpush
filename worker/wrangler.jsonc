@@ -13,7 +13,10 @@
     "enabled": true,
     "head_sampling_rate": 1
   },
-  "routes": [{ "pattern": "gitpixelpush.com", "custom_domain": true }],
+  "routes": [
+    { "pattern": "gitpixelpush.com", "custom_domain": true },
+    { "pattern": "www.gitpixelpush.com/*", "zone_name": "gitpixelpush.com" }
+  ],
   "vars": {
     // Public identifier of your GitHub OAuth App (not secret).
     "GITHUB_CLIENT_ID": "Ov23livKJU8WYZAOMXCG",

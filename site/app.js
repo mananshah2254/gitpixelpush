@@ -770,10 +770,11 @@ function buildPixelField() {
 }
 
 function wireReveals() {
+  if (!("IntersectionObserver" in window) || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const io = new IntersectionObserver((entries) => {
-    for (const en of entries) if (en.isIntersecting) { en.target.classList.add("in"); io.unobserve(en.target); }
+    for (const en of entries) if (en.isIntersecting) { en.target.classList.remove("reveal-pending"); en.target.classList.add("in"); io.unobserve(en.target); }
   }, { threshold: 0.12 });
-  $$(".reveal").forEach((el) => io.observe(el));
+  $$(".reveal").forEach((el) => { io.observe(el); el.classList.add("reveal-pending"); });
 }
 
 function wireTilt() {
