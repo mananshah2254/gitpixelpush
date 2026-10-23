@@ -22,6 +22,7 @@
   <main><article class="article">
     <p class="eyebrow">Contribution calendar guide</p>
     <h1>How to make GitHub contribution graph art</h1>
+    <p>By Manan Shah, GitPixelPush's creator · Updated October 22, 2026</p>
     <p class="lede">Your GitHub profile shows a grid of days. You can design a picture on that grid by creating commits dated for those squares. The important part is being clear that it is art, not a record of work you did on those dates.</p>
 
     <h2>1. Understand what the squares mean</h2>
@@ -47,6 +48,25 @@
       <li>Keep the generated repository's explanation visible. The art should not be mistaken for a record of work done on those historical dates.</li>
     </ul>
     <p>If a square does not appear, do not keep publishing extra commits blindly. First compare its date and branch with GitHub's contribution rules. You can stop, inspect the generated repository, and remove it if the result is not what you intended.</p>
+
+    <h2>Try a small shape without changing your account</h2>
+    <p>Open the homepage and choose <strong>Try the demo canvas</strong>. Demo mode uses sample calendar data and disables publishing. Start with a small shape, such as a three-column letter L: draw a vertical line and add a short horizontal base. Keeping the first design small makes the relationship between dates, squares, and commit counts easier to understand.</p>
+    <p>Use a light ink level first, watch the planned commit count, and try undo before making a larger design. Darker squares generally require more contributions. If a date already has activity, the tool only plans additions toward the chosen level; it cannot erase genuine contributions from other repositories. The real profile's colors can therefore differ from the demo.</p>
+    <p>The demo is a drawing preview, not proof that GitHub will display an identical image. If you later sign in, review the live calendar and publication plan again rather than assuming the demo's counts or dates apply to your account.</p>
+
+    <h2>What happens during publication?</h2>
+    <p>The browser prepares a list of dates and the number of commits to add. After approval, the tool creates or reuses the named repository, writes labelled commits through GitHub's API, and advances the branch. Writes are paced rather than sent all at once. A design with many dark squares can take substantially longer than a small outline.</p>
+    <p>The engine checkpoints branch progress during a run and attempts to respect GitHub's secondary-rate-limit responses. A pause is not necessarily a failed run. Keep the tab open, read the progress log, and avoid starting an overlapping run. Pressing Stop is not an undo operation: commits already published can remain in the repository.</p>
+
+    <h2>When the result is missing or incomplete</h2>
+    <ul>
+      <li><strong>Publishing is disabled:</strong> check whether you are in demo mode or the design needs no additional commits.</li>
+      <li><strong>GitHub asks you to sign in again:</strong> reauthorize only through GitHub's normal page. Do not paste a token into a support message.</li>
+      <li><strong>The log reports a rate limit:</strong> allow the indicated pause. Increasing concurrency or opening more tabs is not a reliable workaround.</li>
+      <li><strong>The run stopped midway:</strong> inspect the repository and the latest branch before retrying. Some progress may already have been published.</li>
+      <li><strong>Commits exist but squares do not:</strong> check GitHub's branch, email, repository and visibility rules, then allow time for its graph to update.</li>
+    </ul>
+    <p>Revoke access to stop future authorization; that does not remove existing commits. Removing the artwork is a separate action. Only delete a repository after checking that it contains solely disposable graph art and no work you want to keep. GitHub determines when profile changes become visible.</p>
 
     <h2>Ready to draw?</h2>
     <p>Try the canvas first; you can see the design before authorizing or publishing anything.</p>
